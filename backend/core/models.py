@@ -24,6 +24,7 @@ class UserManager(BaseUserManager):
         """Create and return a new superuser"""
         user = self.create_user(username, password, **extra_fields)
         user.is_superuser = True
+        user.is_staff = True
         user.save(using=self._db)
 
         return user

@@ -8,7 +8,7 @@ from core.models import User
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        default_password = 'secretPassword'
+        default_password = 'secret'
         default_users = [
             {
                 'username': 'frank',
