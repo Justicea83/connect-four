@@ -33,5 +33,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     """User in the system."""
     username = models.CharField(max_length=255, unique=True)
     name = models.CharField(max_length=255)
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
 
     objects = UserManager()
+
+    USERNAME_FIELD = 'username'
