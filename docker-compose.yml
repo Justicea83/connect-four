@@ -12,6 +12,7 @@ services:
       - ./backend:/app
     command: >
       sh -c "python manage.py migrate &&
+      sh -c "python manage.py create_default_users &&
              python manage.py runserver 0.0.0.0:8000"
     environment:
       DB_HOST: db
