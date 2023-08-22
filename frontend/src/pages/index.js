@@ -1,9 +1,9 @@
 import SignIn from '@/components/SignIn'
 import useAuth from '@/utils/hooks/useAuth'
-import Game from '@/components/Game'
+import Board from "@/components/Board";
 //import styles from '@/styles/Home.module.css'
 
 export default function Home() {
   const { authenticated } = useAuth()
-  return <>{authenticated ? <Game /> : <SignIn />}</>
+  return <>{authenticated ? <Board /> : <SignIn />}</>
 }

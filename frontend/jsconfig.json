@@ -2,7 +2,14 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     }
+  },
+  "typeAcquisition": {
+    "include": [
+      "jest"
+    ]
   }
 }
