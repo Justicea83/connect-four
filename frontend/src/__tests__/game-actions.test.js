@@ -10,23 +10,23 @@ describe('Game Actions', () => {
     });
 
     it('it created empty', function () {
-        expect(stack.top).toBe(-1);
+        expect(stack.top).toBe(0);
         expect(stack.actions).toEqual({});
     });
 
     it('can push to the top', () => {
         stack.push('❤️')
-        expect(stack.top).toBe(0);
+        expect(stack.top).toBe(1);
         expect(stack.peek).toBe('❤️')
     });
 
     it('can pop off', () => {
         stack.push('❤️')
         stack.push('✅')
-        expect(stack.top).toBe(1)
+        expect(stack.top).toBe(2)
         expect(stack.peek).toBe('✅')
         stack.pop()
-        expect(stack.top).toBe(0)
+        expect(stack.top).toBe(1)
         expect(stack.peek).toBe('❤️')
     });
 })

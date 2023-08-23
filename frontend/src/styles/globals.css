@@ -3,36 +3,48 @@
 @tailwind utilities;
 
 body {
-  height: 100vh;
-  background: black;
-  font-family: Arial, Helvetica, sans-serif;
-  text-align: center;
+    height: 100vh;
+    background: black;
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
 }
 
-.board{
-  padding: 10px;
-  height: auto;
-  width: 680px;
-  background-color: #9fb1c1;
-  border: 10px solid #1d1d86;
-
-  margin: 0 auto;
+.with-width {
+    width: 680px;
 }
 
-.tile{
-  height: 80px;
-  width: 80px;
-  margin: 5px;
+.board {
+    padding: 10px;
+    height: auto;
+    width: 680px;
+    background-color: #9fb1c1;
+    border: 10px solid #1d1d86;
 
-  background-color: white;
-  border-radius: 50%;
-  border: 5px solid #262654;
+    margin: 0 auto;
 }
 
-.red-piece {
-  background-color: #565625;
+.tile {
+    height: 80px;
+    width: 80px;
+    margin: 5px;
+
+    background-color: white;
+    border-radius: 50%;
+    border: 5px solid #262654;
 }
 
-.red-piece {
-  background-color: #481212;
+.yellow {
+    background-color: #acac22;
+}
+
+.yellow-text {
+    color: #acac22;
+}
+
+.red {
+    background-color: #b90707;
+}
+
+.red-text {
+    color: #b90707;
 }
