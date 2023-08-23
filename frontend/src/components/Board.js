@@ -255,8 +255,6 @@ export default function Board() {
                 setGameOver(true)
             }
         }
-
-        console.log(`row: ${rowIndex}, col: ${colIndex}`)
     }
     const buildGame = () => {
         return Array.from({length: ROWS}, (_, index) => (
