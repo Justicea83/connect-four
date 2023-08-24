@@ -10,6 +10,7 @@ from game import serializers
 # Create your views here.
 class GameViewSet(
     mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
     viewsets.GenericViewSet
@@ -30,6 +31,8 @@ class GameViewSet(
         """Return the serializer class for request."""
         if self.action == 'list':
             return serializers.GameSerializer
+        if self.action == 'update' or self.action == 'partial_update':
+            return serializers.GameUpdateSerializer
 
         return self.serializer_class
 

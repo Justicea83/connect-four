@@ -7,7 +7,7 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework import status
 
-from core.models import Game
+from core.models import Game, User
 from game.serializers import GameSerializer, GameDetailSerializer
 
 GAMES_URL = reverse('game:game-list')
@@ -19,7 +19,7 @@ def detail_url(game_id):
     return reverse('game:game-detail', args=[game_id])
 
 
-def create_user(username='Adams', password='testpass123'):
+def create_user(username='Adams', password='testpass123') -> User:
     """Creates and return a new user."""
     return get_user_model().objects.create_user(username, password)
 
@@ -109,6 +109,31 @@ class PrivateGameAPITests(TestCase):
         self.assertEqual(game.player_one.pk, payload['player_one'])
         self.assertEqual(game.player_two.pk, payload['player_two'])
 
+    def test_update_game(self):
+        """Test updating a game."""
+        player_two = create_user(username='Gamer1')
+
+        game: Game = create_game(
+            player_one=player_two,
+            player_two=self.user
+        )
+
+        self.assertIsNone(game.winner)
+        self.assertEqual(game.is_complete, False)
+
+        url = detail_url(game.pk)
+
+        res = self.client.patch(url, {
+            'winner': player_two.pk,
+            'is_complete': True
+        })
+
+        game.refresh_from_db()
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(game.winner.pk, player_two.pk)
+        self.assertEqual(game.is_complete, True)
+
     def test_create_game_action(self):
         """Test creating an action on a game."""
         player_two = create_user(username='Gamer1')
@@ -118,11 +143,12 @@ class PrivateGameAPITests(TestCase):
             player_two=self.user
         )
 
-        res = self.client.post(GAME_ACTIONS_URL, {
+        res1 = self.client.post(GAME_ACTIONS_URL, {
             'action': '(1,L)',
             'game': game.pk
         })
-        res = self.client.post(GAME_ACTIONS_URL, {
+
+        res2 = self.client.post(GAME_ACTIONS_URL, {
             'action': '(2,L)',
             'game': game.pk
         })
@@ -130,5 +156,6 @@ class PrivateGameAPITests(TestCase):
         gameDetail = Game.objects.get(id=game.pk)
         serializer = GameDetailSerializer(gameDetail)
 
-        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res1.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res2.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(serializer.data['game_actions']), 2)

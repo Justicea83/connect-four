@@ -48,3 +48,9 @@ class GameDetailSerializer(GameSerializer):
     def get_game_actions(self, instance):
         actions = instance.game_actions.all().order_by('id')
         return GameActionSerializer(actions, many=True).data
+
+
+class GameUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Game
+        fields = ['winner', 'is_complete']
