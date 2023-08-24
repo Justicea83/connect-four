@@ -5,6 +5,7 @@ from django.db import models
 from django.contrib.auth.models import (
     AbstractBaseUser, BaseUserManager, PermissionsMixin
 )
+from django.conf import settings
 
 
 # Create your models here.
@@ -40,3 +41,44 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = 'username'
+
+
+class Game(models.Model):
+    """Game Object."""
+    player_one: User = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='player_one_FK'
+    )
+    player_two: User = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='player_two_FK'
+    )
+    winner: User = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name='winner_FK',
+        blank=True,
+        null=True
+    )
+    is_complete = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.player_one.name}&{self.player_two.name}"
+
+
+class GameAction(models.Model):
+    player: User = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+    game = models.ForeignKey(Game, on_delete=models.CASCADE, null=True, blank=True, related_name='game_actions')
+    action = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.player.name}:{self.action}"

@@ -3,7 +3,7 @@ Tests for models
 """
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from core.models import User
+from core.models import User, Game, GameAction
 
 
 def create_user(username='mike', password='testpass123'):
@@ -29,3 +29,25 @@ class ModelTests(TestCase):
         """Test that creating a user without a username raises a ValueError"""
         with self.assertRaises(ValueError):
             get_user_model().objects.create_user('', 'test123')
+
+    def test_create_game(self):
+        """Test creating a game is successful."""
+        player_one = create_user()
+        player_two = create_user(username='Jamie')
+
+        game: Game = Game.objects.create(
+            player_one=player_one,
+            player_two=player_two
+        )
+
+        self.assertEqual(str(game), f"{player_one.name}&{player_two.name}")
+
+    def test_create_game_action(self):
+        """Test creating an action in a game"""
+        player = create_user()
+
+        gameAction: GameAction = GameAction.objects.create(
+            action='(2,R)',
+            player=player
+        )
+        self.assertEqual(str(gameAction), f"{player.name}:{gameAction.action}")
