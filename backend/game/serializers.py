@@ -9,8 +9,8 @@ class GameActionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GameAction
-        fields = ['action', 'game', 'id']
-        read_only_fields = ['id']
+        fields = ['action', 'game', 'id', 'player']
+        read_only_fields = ['id', 'player']
 
     def create(self, validated_data):
         """Create a game action."""
@@ -31,7 +31,7 @@ class GameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
         fields = ['id', 'player_one', 'player_two', 'winner', 'is_complete']
-        read_only_fields = ['id', 'game_actions', 'winner', 'is_complete']
+        read_only_fields = ['id', 'winner', 'is_complete']
         extra_kwargs = {
             'player_one': {'required': 'True'},
             'player_two': {'required': 'True'},
@@ -40,6 +40,11 @@ class GameSerializer(serializers.ModelSerializer):
 
 class GameDetailSerializer(GameSerializer):
     """Serializer for game detail view."""
+    game_actions = serializers.SerializerMethodField()
 
     class Meta(GameSerializer.Meta):
         fields = GameSerializer.Meta.fields + ['game_actions']
+
+    def get_game_actions(self, instance):
+        actions = instance.game_actions.all().order_by('id')
+        return GameActionSerializer(actions, many=True).data

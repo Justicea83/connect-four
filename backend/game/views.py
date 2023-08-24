@@ -43,3 +43,6 @@ class GameActionViewSet(
     queryset = GameAction.objects.all()
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return self.queryset.order_by('-id')
