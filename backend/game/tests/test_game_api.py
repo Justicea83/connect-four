@@ -19,6 +19,11 @@ def detail_url(game_id):
     return reverse('game:game-detail', args=[game_id])
 
 
+def game_reset_url(game_id):
+    """Reset a game."""
+    return reverse('game:game-reset', args=[game_id])
+
+
 def create_user(username='Adams', password='testpass123') -> User:
     """Creates and return a new user."""
     return get_user_model().objects.create_user(username, password)
@@ -133,6 +138,52 @@ class PrivateGameAPITests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(game.winner.pk, player_two.pk)
         self.assertEqual(game.is_complete, True)
+
+    def test_reset_game(self):
+        """Test resetting a game."""
+        player_two = create_user(username='Gamer1')
+
+        game: Game = create_game(
+            player_one=player_two,
+            player_two=self.user
+        )
+
+        res1 = self.client.post(GAME_ACTIONS_URL, {
+            'action': '(1,R)',
+            'game': game.pk
+        })
+
+        game.refresh_from_db()
+        serializer = GameDetailSerializer(game)
+
+        self.assertEqual(res1.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(serializer.data['game_actions']), 1)
+
+        url = detail_url(game.pk)
+
+        res = self.client.patch(url, {
+            'winner': self.user.pk,
+            'is_complete': True
+        })
+
+        game.refresh_from_db()
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(game.winner, self.user)
+        self.assertTrue(game.is_complete)
+
+        reset_url = game_reset_url(game.pk)
+
+        res3 = self.client.post(reset_url)
+
+        game.refresh_from_db()
+
+        self.assertEqual(res3.status_code, status.HTTP_200_OK)
+        self.assertFalse(game.is_complete)
+        self.assertIsNone(game.winner)
+        serializer = GameDetailSerializer(game)
+
+        self.assertEqual(len(serializer.data['game_actions']), 0)
 
     def test_create_game_action(self):
         """Test creating an action on a game."""

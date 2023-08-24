@@ -1,7 +1,9 @@
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from core.models import Game, GameAction
 from game import serializers
@@ -31,10 +33,29 @@ class GameViewSet(
         """Return the serializer class for request."""
         if self.action == 'list':
             return serializers.GameSerializer
-        if self.action == 'update' or self.action == 'partial_update':
+        elif self.action == 'update' or self.action == 'partial_update':
             return serializers.GameUpdateSerializer
+        elif self.action == 'reset_game':
+            return serializers.GameResetSerializer
 
         return self.serializer_class
+
+    @action(methods=['POST'], detail=True, url_path='reset', url_name='reset')
+    def reset_game(self, request, pk=None):
+        game: Game = self.get_object()
+
+        game.winner = None
+        game.is_complete = False
+        game.game_actions.clear()
+
+        """Reset the game."""
+        serializer = self.get_serializer(game, data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GameActionViewSet(

@@ -54,3 +54,12 @@ class GameUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
         fields = ['winner', 'is_complete']
+
+
+class GameResetSerializer(serializers.ModelSerializer):
+    """Serializer for game reset."""
+
+    class Meta:
+        model = Game
+        fields = ['id']
+        read_only_fields = ['id', 'winner', 'is_complete']
