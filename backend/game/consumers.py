@@ -46,6 +46,13 @@ class GameConsumer(AsyncWebsocketConsumer):
         except GameAction.DoesNotExist:
             GameAction.objects.create(player=user, game=game, action=event["payload"])
 
+    @database_sync_to_async
+    def reset_game(self, game: Game):
+        game.winner = None
+        game.is_complete = False
+        game.game_actions.all().delete()
+        game.save()
+
     async def game_event(self, event):
         user = event['user']
 
@@ -71,3 +78,4 @@ class GameConsumer(AsyncWebsocketConsumer):
                     "user": event["user"].pk,
                 })
             )
+            await self.reset_game(game)

@@ -46,7 +46,7 @@ class GameViewSet(
 
         game.winner = None
         game.is_complete = False
-        game.game_actions.clear()
+        game.game_actions.all().delete()
 
         """Reset the game."""
         serializer = self.get_serializer(game, data=request.data)
