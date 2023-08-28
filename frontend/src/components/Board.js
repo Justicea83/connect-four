@@ -2,6 +2,7 @@ import {useEffect, useRef, useState} from "react";
 import GameRow from "@/components/game/game-row";
 import GameActions, {getColor, PLAYER_ONE, PLAYER_TWO} from "@/utils/GameActions";
 import classNames from "@/utils/misc";
+import useGame from "@/utils/hooks/useGame";
 
 export const COLS = 7
 const ROWS = 7
@@ -11,6 +12,7 @@ const TOTAL_ACTIONS = COLS * ROWS
 const LEFT = 'L'
 const RIGHT = 'R'
 
+const SINGLE_GAME_ID = 1
 const ACTION_PLAY = 'action.play'
 const ACTION_RESET = 'action.reset'
 
@@ -30,9 +32,45 @@ export default function Board() {
     const [gameActions, setGameActions] = useState(new GameActions())
     const [winner, setWinner] = useState(null)
     const [gameOver, setGameOver] = useState(false)
+    const initialized = useRef(false)
 
     const [game, setGame] = useState(initialGame())
     const socketRef = useRef(null);
+
+    useEffect(() => {
+        if (!initialized.current) {
+            initialized.current = true
+            fetchData()
+        }
+    }, [])
+
+    const fetchData = async () => {
+        const {getSingleGame} = useGame()
+
+        const {data} = await getSingleGame(SINGLE_GAME_ID)
+        if (data && !data.is_complete) {
+            const actions = data.game_actions
+
+            console.log(actions)
+            actions.forEach(({action, player}) => {
+                const user = parseInt(player)
+
+                let incomingCurrentPlayer
+
+                if (user === 1) {
+                    incomingCurrentPlayer = PLAYER_ONE
+                }
+
+                if (user === 2) {
+                    incomingCurrentPlayer = PLAYER_TWO
+                }
+
+                const [rowIndex, colIndex] = action.toString().split(',')
+                tileClicked(rowIndex, colIndex, incomingCurrentPlayer, true)
+            })
+        }
+    }
+
 
     useEffect(() => {
         const token = localStorage.getItem('token')
@@ -246,7 +284,7 @@ export default function Board() {
         }
     }
 
-    const tileClicked = (rowIndex, colIndex, currentPlayer) => {
+    const tileClicked = (rowIndex, colIndex, currentPlayer, automatic = false) => {
         rowIndex = parseInt(rowIndex)
         colIndex = parseInt(colIndex)
 
@@ -254,14 +292,16 @@ export default function Board() {
             return
         }
 
-        if (winner || gameOver) {
-            alert('Click `Play Again` to continue.')
-            return;
-        }
+        if (!automatic) {
+            if (winner || gameOver) {
+                alert('Click `Play Again` to continue.')
+                return;
+            }
 
-        if (!eligibleTile(rowIndex, colIndex)) {
-            alert('Please play from either the left or right');
-            return
+            if (!eligibleTile(rowIndex, colIndex)) {
+                alert('Please play from either the left or right');
+                return
+            }
         }
 
         // If the row is full we skip the action
@@ -276,7 +316,7 @@ export default function Board() {
 
             // You have already played
             if (lastAction.player === currentPlayer) {
-                alert("It's not your turn yet!")
+                !automatic && alert("It's not your turn yet!")
                 return
             }
         } else {

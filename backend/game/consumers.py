@@ -3,6 +3,8 @@ Game consumers.
 """
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
+from core.models import Game, GameAction
+from channels.db import database_sync_to_async
 
 
 class GameConsumer(AsyncWebsocketConsumer):
@@ -30,13 +32,29 @@ class GameConsumer(AsyncWebsocketConsumer):
             }
         )
 
+    @database_sync_to_async
+    def get_default_game(self) -> Game:
+        return Game.objects.first()
+
+    @database_sync_to_async
+    def create_game_action(self, user, game, event):
+        try:
+            latest_record = GameAction.objects.latest('id')
+            if latest_record.player != user:
+                GameAction.objects.create(player=user, game=game, action=event["payload"])
+
+        except GameAction.DoesNotExist:
+            GameAction.objects.create(player=user, game=game, action=event["payload"])
+
     async def game_event(self, event):
         user = event['user']
+
+        # For simplicity, we will use a single game model
+        game = await self.get_default_game()
 
         action = event['action']
 
         if action == 'action.play':
-            # TODO save to db
             await self.send(
                 text_data=json.dumps({
                     "action": event['action'],
@@ -44,9 +62,9 @@ class GameConsumer(AsyncWebsocketConsumer):
                     "user": event["user"].pk,
                 })
             )
+            await self.create_game_action(user=user, game=game, event=event)
 
         if action == 'action.reset':
-            # TODO reset the game
             await self.send(
                 text_data=json.dumps({
                     "action": event['action'],
