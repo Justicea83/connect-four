@@ -11,6 +11,9 @@ const TOTAL_ACTIONS = COLS * ROWS
 const LEFT = 'L'
 const RIGHT = 'R'
 
+const ACTION_PLAY = 'action.play'
+const ACTION_RESET = 'action.reset'
+
 const initialGame = () => Array.from({length: ROWS}, () =>
     Array.from({length: COLS}, () => gameCell)
 )
@@ -32,7 +35,6 @@ export default function Board() {
     const socketRef = useRef(null);
 
     useEffect(() => {
-        // Create a new WebSocket instance
         const token = localStorage.getItem('token')
         if (!token) {
             return;
@@ -41,7 +43,40 @@ export default function Board() {
 
         // Event handler for receiving messages
         socketRef.current.onmessage = event => {
-            console.log('Received message:', JSON.parse(event.data));
+            const eventData = JSON.parse(event.data)
+            console.log("RECEIVED <<<<<<<========", eventData)
+            const action = eventData.action
+
+            if (action === ACTION_PLAY) {
+                const user = parseInt(eventData.user)
+
+                const userId = parseInt(localStorage.getItem('userId'))
+                const pId = getPlayerId(userId)
+
+                let incomingCurrentPlayer
+
+                if (user === 1) {
+                    incomingCurrentPlayer = PLAYER_ONE
+                }
+
+                if (user === 2) {
+                    incomingCurrentPlayer = PLAYER_TWO
+                }
+
+                // If the action is coming from the same user, do nothing!
+                if (incomingCurrentPlayer === pId) {
+                    return;
+                }
+
+                const [rowIndex, colIndex] = eventData.payload.toString().split(',')
+                setTimeout(() => {
+                    tileClicked(rowIndex, colIndex, incomingCurrentPlayer)
+                }, 10)
+            }
+
+            if (action === ACTION_RESET) {
+                resetGame()
+            }
         };
 
         // Clean up the WebSocket connection on component unmount
@@ -51,6 +86,25 @@ export default function Board() {
             }
         };
     }, []);
+
+    const getPlayerId = (id) => {
+        if (id === 1) {
+            return PLAYER_ONE
+        }
+
+        if (id === 2) {
+            return PLAYER_TWO
+        }
+
+        return null
+    }
+    const broadcast = (action, payload = null) => {
+        const data = {
+            action, payload
+        }
+        console.log('SENDING DATA =====>>>>>', data)
+        socketRef.current?.send(JSON.stringify(data));
+    }
 
 
     const eligibleTile = (rowIndex, colIndex) => {
@@ -178,29 +232,33 @@ export default function Board() {
     }
 
     const resetGame = () => {
-        setGame(initialGame())
-        setGameActions(new GameActions())
-        setWinner(null)
-        setGameOver(false)
-
-        // Remove classes for coloring
-        for (let row = 0; row < ROWS; row++) {
-            for (let col = 0; col < COLS; col++) {
-                const tile = cellRefs[row][col]
-                tile.current.classList.remove('red', 'yellow')
-            }
-        }
+        window.location.reload()
     }
 
     const getWinnerName = () => {
         return winner?.split('_').join(' ')
     }
 
-    const tileClicked = (rowIndex, colIndex) => {
+    const titleClickedAndBroadCast = (rowIndex, colIndex, currentPlayer) => {
+        const direction = tileClicked(rowIndex, colIndex, currentPlayer)
+        if (direction) {
+            broadcast(ACTION_PLAY, `${rowIndex},${colIndex},${direction}`)
+        }
+    }
+
+    const tileClicked = (rowIndex, colIndex, currentPlayer) => {
+        rowIndex = parseInt(rowIndex)
+        colIndex = parseInt(colIndex)
+
+        if (!currentPlayer) {
+            return
+        }
+
         if (winner || gameOver) {
             alert('Click `Play Again` to continue.')
             return;
         }
+
         if (!eligibleTile(rowIndex, colIndex)) {
             alert('Please play from either the left or right');
             return
@@ -213,12 +271,16 @@ export default function Board() {
 
         const direction = getDirection(rowIndex, colIndex)
 
-        let currentPlayer
-        if (!gameActions.peek) {
-            currentPlayer = PLAYER_ONE
-        } else {
+        if (gameActions.peek) {
             const lastAction = gameActions.peek
-            currentPlayer = lastAction.player === PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE
+
+            // You have already played
+            if (lastAction.player === currentPlayer) {
+                alert("It's not your turn yet!")
+                return
+            }
+        } else {
+
         }
 
         const gameTracker = [...game]
@@ -278,6 +340,8 @@ export default function Board() {
                 setGameOver(true)
             }
         }
+
+        return direction
     }
     const buildGame = () => {
         return Array.from({length: ROWS}, (_, index) => (
@@ -285,7 +349,11 @@ export default function Board() {
                 key={`row-${index}`}
                 row={index}
                 rowRefs={cellRefs[index]}
-                titleClick={(rowIndex, colIndex) => tileClicked(rowIndex, colIndex)}
+                titleClick={(rowIndex, colIndex) => {
+                    const userId = parseInt(localStorage.getItem('userId'))
+                    const currentPlayer = getPlayerId(userId)
+                    titleClickedAndBroadCast(rowIndex, colIndex, currentPlayer)
+                }}
             />
         ))
     }
@@ -304,7 +372,7 @@ export default function Board() {
                 {
                     (winner || gameOver) &&
                     <button
-                        onClick={resetGame}
+                        onClick={() => broadcast(ACTION_RESET)}
                         type="button"
                         className=" inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm "
                     >
