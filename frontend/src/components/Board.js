@@ -1,4 +1,4 @@
-import {useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import GameRow from "@/components/game/game-row";
 import GameActions, {getColor, PLAYER_ONE, PLAYER_TWO} from "@/utils/GameActions";
 import classNames from "@/utils/misc";
@@ -29,6 +29,29 @@ export default function Board() {
     const [gameOver, setGameOver] = useState(false)
 
     const [game, setGame] = useState(initialGame())
+    const socketRef = useRef(null);
+
+    useEffect(() => {
+        // Create a new WebSocket instance
+        const token = localStorage.getItem('token')
+        if (!token) {
+            return;
+        }
+        socketRef.current = new WebSocket(`ws://localhost:8000/ws/game/?token=${token}`);
+
+        // Event handler for receiving messages
+        socketRef.current.onmessage = event => {
+            console.log('Received message:', JSON.parse(event.data));
+        };
+
+        // Clean up the WebSocket connection on component unmount
+        return () => {
+            if (socketRef.current) {
+                socketRef.current.close();
+            }
+        };
+    }, []);
+
 
     const eligibleTile = (rowIndex, colIndex) => {
         return !!(LEFT_COORS[`${rowIndex}:${colIndex}`] || RIGHT_COORS[`${rowIndex}:${colIndex}`])

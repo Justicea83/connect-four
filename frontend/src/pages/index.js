@@ -1,9 +1,14 @@
 import SignIn from '@/components/SignIn'
 import useAuth from '@/utils/hooks/useAuth'
 import Board from "@/components/Board";
-//import styles from '@/styles/Home.module.css'
+import {useEffect, useState} from "react";
 
 export default function Home() {
-  const { authenticated } = useAuth()
-  return <>{authenticated ? <Board /> : <SignIn />}</>
+    const [authenticated, setIsAuth] = useState(false)
+
+    useEffect(() => {
+        const {authenticated: auth} = useAuth()
+        setIsAuth(auth)
+    })
+    return <>{authenticated ? <Board/> : <SignIn/>}</>
 }
