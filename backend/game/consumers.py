@@ -18,8 +18,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        print('INCOMING ---->')
-        print(text_data_json)
         action = text_data_json["action"]
         payload = text_data_json["payload"]
 

@@ -5,4 +5,4 @@ Commands to run
 
 `docker-compose run --rm api sh -c "python manage.py collectstatic"`
 
-`docker-compose run --rm app sh -c "python manage.py test && flake8"`
+`docker-compose run --rm api sh -c "python manage.py test && flake8"`

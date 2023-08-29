@@ -51,7 +51,6 @@ export default function Board() {
         if (data && !data.is_complete) {
             const actions = data.game_actions
 
-            console.log(actions)
             actions.forEach(({action, player}) => {
                 const user = parseInt(player)
 
