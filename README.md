@@ -62,4 +62,8 @@ After creating the server, you can find the tables on the left pane.
 
 <img width="525" alt="Screenshot 2023-08-29 at 06 51 59" src="https://github.com/Justicea83/monadical-test/assets/26106822/72179c38-fdd7-4e02-b5bc-a9cccd642b6d">
 
+### Sample Game
+
+https://github.com/Justicea83/monadical-test/assets/26106822/628fb9c1-29ea-4182-820f-1b21683264ce
+
 
