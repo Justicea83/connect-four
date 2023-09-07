@@ -70,7 +70,6 @@ export default function Board() {
         }
     }
 
-
     useEffect(() => {
         const token = localStorage.getItem('token')
         if (!token) {

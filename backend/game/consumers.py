@@ -5,6 +5,8 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from core.models import Game, GameAction
 from channels.db import database_sync_to_async
+from django.contrib.auth import get_user_model
+import random
 
 
 class GameConsumer(AsyncWebsocketConsumer):
@@ -35,6 +37,10 @@ class GameConsumer(AsyncWebsocketConsumer):
         return Game.objects.first()
 
     @database_sync_to_async
+    def get_user_by_id(self, id) -> Game:
+        return get_user_model().objects.get(id=id)
+
+    @database_sync_to_async
     def create_game_action(self, user, game, event):
         try:
             latest_record = GameAction.objects.latest('id')
@@ -43,6 +49,28 @@ class GameConsumer(AsyncWebsocketConsumer):
 
         except GameAction.DoesNotExist:
             GameAction.objects.create(player=user, game=game, action=event["payload"])
+
+    async def bot_play(self, game):
+        bot_id = 1
+        user = await self.get_user_by_id(bot_id)
+        direction = random.choice(['L', 'R'])
+        row = random.choice([0, 1, 2, 3, 4, 5, 6])
+        col = 0
+
+        if direction == 'L':
+            col = 0
+        elif direction == 'R':
+            col = 6
+
+        action = f"{str(row)},{str(col)},{direction}"
+        await self.create_game_action(user, game, {"payload": action})
+        await self.send(
+            text_data=json.dumps({
+                "action": 'action.play',
+                "payload": action,
+                "user": bot_id,
+            })
+        )
 
     @database_sync_to_async
     def reset_game(self, game: Game):
@@ -68,6 +96,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                 })
             )
             await self.create_game_action(user=user, game=game, event=event)
+            await self.bot_play(game)
 
         if action == 'action.reset':
             await self.send(
